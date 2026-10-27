@@ -66,6 +66,10 @@ neoForge {
     runs {
         client {
             client()
+            // -PminimalRuntime runs in a folder of its own, so its worlds and configs stay apart from the full runs.
+            if (project.hasProperty("minimalRuntime")) {
+                gameDirectory = file("run-minimal")
+            }
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -135,19 +139,28 @@ dependencies {
     runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 
+    // The optional partners below are left out of a run started with -PminimalRuntime, to check the mod with only Create.
+    def withPartners = !project.hasProperty("minimalRuntime")
+
     // Create Big Cannons, only present in the dev client and server so cannon shells can be tried against fields
-    localRuntime "maven.modrinth:create-big-cannons:${cbc_version}"
-    localRuntime "maven.modrinth:rpl:${rpl_version}"
+    if (withPartners) {
+        localRuntime "maven.modrinth:create-big-cannons:${cbc_version}"
+        localRuntime "maven.modrinth:rpl:${rpl_version}"
+    }
 
     // Sable and Create Aeronautics, so a field can be tried on a ship in the dev runs; the companion is only for compiling
     compileOnly "dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_companion_version}"
     // Sable itself is needed to compile only for pushing intruding ships away (its physics handles); at run time it is optional
     compileOnly "maven.modrinth:sable:${sable_version}"
-    localRuntime "maven.modrinth:sable:${sable_version}"
-    localRuntime "maven.modrinth:create-aeronautics:${aeronautics_version}"
+    if (withPartners) {
+        localRuntime "maven.modrinth:sable:${sable_version}"
+        localRuntime "maven.modrinth:create-aeronautics:${aeronautics_version}"
+    }
 
     // JEI, so the items and recipes of the mod can be looked at in the dev client
-    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    if (withPartners) {
+        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    }
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
