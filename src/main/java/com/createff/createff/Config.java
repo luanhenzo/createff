@@ -9,6 +9,7 @@ public class Config {
     public static final ModConfigSpec.IntValue DEFAULT_EXTENT;
     public static final ModConfigSpec.IntValue MAX_EXTENT;
     public static final ModConfigSpec.IntValue MAX_FIELDS_PER_PLAYER;
+    public static final ModConfigSpec.BooleanValue BLOCK_TRANSFERS_ACROSS_WALLS;
 
     public static final ModConfigSpec.DoubleValue MIN_RPM;
     public static final ModConfigSpec.DoubleValue MAX_EFFECTIVE_RPM;
@@ -80,6 +81,8 @@ public class Config {
                 .defineInRange("maxExtent", 64, 1, 256);
         MAX_FIELDS_PER_PLAYER = BUILDER.comment("Force fields one player may own at once, in every dimension. Operators in creative mode are exempt. 0 means no limit")
                 .defineInRange("maxFieldsPerPlayer", 3, 0, 1000);
+        BLOCK_TRANSFERS_ACROSS_WALLS = BUILDER.comment("Hoppers, pipes, funnels, chutes and other blocks outside a field cannot move items or fluids into or out of containers inside it. Blocks inside the field, or moving things from inside to outside, are not affected")
+                .define("blockTransfersAcrossWalls", true);
         BUILDER.pop();
 
         BUILDER.push("power");

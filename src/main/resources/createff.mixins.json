@@ -9,6 +9,9 @@
     "FireBlockMixin",
     "DispenserBlockMixin",
     "DropperBlockMixin",
+    "HopperBlockEntityMixin",
+    "BlockCapabilityMixin",
+    "BoundTickingBlockEntityMixin",
     "PistonStructureResolverMixin",
     "CannonExplosionMixin"
   ],

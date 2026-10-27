@@ -24,6 +24,8 @@ public class FieldManager extends SavedData {
     private static final String NAME = "createff_fields";
 
     private final Map<BlockPos, Field> fields = new HashMap<>();
+    /** What the fields looked like last tick, to know when the inventories handed out near them are out of date. */
+    private final Map<BlockPos, FieldTransfers.Snapshot> seen = new HashMap<>();
 
     public static FieldManager get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(
@@ -151,6 +153,7 @@ public class FieldManager extends SavedData {
                 setDirty();
             }
         }
+        FieldTransfers.invalidateChanged(level, fields, seen);
         ShipSupport.repel(level, fields.values());
     }
 }
