@@ -2,10 +2,11 @@
 
 **createff**: force fields as tangible claims for factions servers. NeoForge 1.21.1, powered by Create.
 
-A **Field Projector** is a Create kinetic block. Spin it with enough rotation and it projects a cube or a sphere
-around itself that blocks and protects everything inside. There is no health bar to chew through: explosions and
-projectiles that hit the wall add **overload**, and at 100% the field shuts down, the claim is lifted and the
-projector can be broken. Defenders keep it alive by spinning it faster and by making sure nobody hammers the same spot.
+A **Field Projector** is a Create kinetic block that can lie along any axis. Spin it with enough rotation and it
+projects a cube or a sphere around itself that blocks and protects everything inside. There is no health bar to chew
+through: explosions and projectiles that hit the wall add **overload**, and at 100% the field shuts down, the claim
+is lifted and the projector can be broken. Defenders keep it alive by spinning it faster and by making sure nobody
+hammers the same spot.
 
 > **Status: beta (0.1.0).** It works and has been played, but see [Known issues](#known-issues).
 
@@ -14,8 +15,8 @@ projector can be broken. Defenders keep it alive by spinning it faster and by ma
 | | Version |
 |---|---|
 | Minecraft | 1.21.1 |
-| NeoForge | 21.1.264 or newer |
-| Create | 6.0.x (required) |
+| NeoForge | 21.1.0 or newer |
+| Create | 6.0.0 or newer (required) |
 
 Optional, detected at runtime:
 
@@ -102,4 +103,4 @@ The jar is written to `build/libs/`.
 
 ## License
 
-All rights reserved for now.
+[MIT](LICENSE). Use it, change it and ship it in your modpacks; just keep the copyright notice.

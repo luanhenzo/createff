@@ -7,6 +7,10 @@ First playable version.
 ### Added
 
 - Field Projector, Force Cores (3 tiers), Resistance, Veil and Aegis upgrades.
+- A Field Projector with a glass chamber in a brass frame. It can lie along any axis, is placed like other Create
+  shafts, is turned with a wrench, and passes rotation through from one shaft end to the other.
+- The force core shows inside the glass as glowing, nested cubes in the colour of its tier. They spin and pulse with
+  the shaft while the field is on, and sit dim and still when it is off or overloaded.
 - Cube and sphere fields, sized in the projector screen or with commands.
 - Overload model: explosions and projectiles add it, RPM cools it, 100% shuts the field down.
 - Growing damage on a spot that is attacked again and again.
@@ -17,6 +21,7 @@ First playable version.
 - Fields on Sable ships (cube as an oriented box): they follow the ship, protect it and can be attacked; ships
   that may not enter are pushed back, and fields of different ships collide.
 - Ripples and heat map on the wall, with sounds, scaled to the blow.
+- Mod id `createff`, command `/cff`.
 
 ### Known issues
 
