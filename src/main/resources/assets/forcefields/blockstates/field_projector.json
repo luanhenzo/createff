@@ -1,7 +1,0 @@
-{
-	"variants": {
-		"axis=y": { "model": "forcefields:block/field_projector" },
-		"axis=z": { "model": "forcefields:block/field_projector", "x": 90 },
-		"axis=x": { "model": "forcefields:block/field_projector", "x": 90, "y": 90 }
-	}
-}

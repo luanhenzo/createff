@@ -1,6 +1,6 @@
-# ForceFields
+# Create Force Fields
 
-Force fields as tangible claims for factions servers. NeoForge 1.21.1, powered by Create.
+**createff**: force fields as tangible claims for factions servers. NeoForge 1.21.1, powered by Create.
 
 A **Field Projector** is a Create kinetic block. Spin it with enough rotation and it projects a cube or a sphere
 around itself that blocks and protects everything inside. There is no health bar to chew through: explosions and
@@ -67,7 +67,7 @@ Install the jar on **both the server and the clients**: the wall is predicted on
 
 ## Commands
 
-`/forcefields` works on the field you are looking at or standing in.
+`/cff` works on the field you are looking at or standing in.
 
 | Command | Who | What |
 |---|---|---|
@@ -80,12 +80,12 @@ Install the jar on **both the server and the clients**: the wall is predicted on
 
 ## Configuration
 
-Everything is in `forcefields-common.toml` (in `config/`): field size and stress, overload and cooling, explosion
+Everything is in `createff-common.toml` (in `config/`): field size and stress, overload and cooling, explosion
 and projectile damage, the per-type projectile damage list, ship push strength, ripple and veil options, and
 whether ops manage any field. Projectile damage can be set by hand per entity type or tag (`id=damage@speed`).
 
 Debug logging is on in a dev environment and off in a release; switch it with `debug.logDamage` / `debug.logShips`
-or the `/forcefields debug` commands. With `logDamage` on, every hit prints the numbers behind it, which is the way
+or the `/cff debug` commands. With `logDamage` on, every hit prints the numbers behind it, which is the way
 to tune the balance for your server.
 
 ## Known issues

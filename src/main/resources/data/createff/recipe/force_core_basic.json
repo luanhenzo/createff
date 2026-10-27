@@ -1,0 +1,1 @@
+{ "type": "minecraft:crafting_shaped", "pattern": [ "ODO", "DCD", "ODO" ], "key": { "O": { "item": "minecraft:obsidian" }, "D": { "item": "minecraft:diamond" }, "C": { "item": "create:brass_casing" } }, "result": { "id": "createff:force_core_basic", "count": 1 } }

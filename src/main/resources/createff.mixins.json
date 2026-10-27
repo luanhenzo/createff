@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "com.createff.createff.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+    "EntityMixin",
+    "FlowingFluidMixin",
+    "FireBlockMixin",
+    "DispenserBlockMixin",
+    "DropperBlockMixin",
+    "PistonStructureResolverMixin",
+    "CannonExplosionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,1 +1,0 @@
-{ "type": "minecraft:crafting_shaped", "pattern": [ "PDP", "DBD", "PDP" ], "key": { "P": { "item": "create:precision_mechanism" }, "D": { "item": "minecraft:diamond" }, "B": { "item": "forcefields:force_core_basic" } }, "result": { "id": "forcefields:force_core_advanced", "count": 1 } }

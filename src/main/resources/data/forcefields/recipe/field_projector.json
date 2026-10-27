@@ -1,1 +1,0 @@
-{ "type": "minecraft:crafting_shaped", "pattern": [ "OEO", "ECE", "OSO" ], "key": { "O": { "item": "minecraft:obsidian" }, "E": { "item": "minecraft:ender_pearl" }, "C": { "item": "create:brass_casing" }, "S": { "item": "create:shaft" } }, "result": { "id": "forcefields:field_projector", "count": 1 } }

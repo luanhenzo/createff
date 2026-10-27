@@ -1,1 +1,0 @@
-{ "type": "minecraft:crafting_shaped", "pattern": [ "PNP", "NAN", "PNP" ], "key": { "P": { "item": "create:precision_mechanism" }, "N": { "item": "minecraft:netherite_ingot" }, "A": { "item": "forcefields:force_core_advanced" } }, "result": { "id": "forcefields:force_core_elite", "count": 1 } }

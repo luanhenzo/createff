@@ -1,0 +1,7 @@
+{
+	"variants": {
+		"axis=y": { "model": "createff:block/field_projector" },
+		"axis=z": { "model": "createff:block/field_projector", "x": 90 },
+		"axis=x": { "model": "createff:block/field_projector", "x": 90, "y": 90 }
+	}
+}
