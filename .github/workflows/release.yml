@@ -1,0 +1,69 @@
+name: Release
+
+# Runs when a release is published on GitHub. The tag is the version: v0.1.0 builds createff-0.1.0.jar, attaches it to
+# the release and uploads it to Modrinth. Tick "pre-release" on the release to publish a beta.
+#
+# Needs, in the repository settings:
+#   - the secret MODRINTH_TOKEN: a Modrinth personal access token that may create versions;
+#   - the variable MODRINTH_ID: the id of the Create Force Fields project on Modrinth.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@da187c8e6ffbd3802e00f2477aa5a822b25f2dda # v4.4.4
+
+      - name: Work out the version
+        id: version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          echo "number=${TAG#v}" >> "$GITHUB_OUTPUT"
+          if [ "$PRERELEASE" = "true" ]; then
+            echo "type=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=release" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -P beats gradle.properties, so the jar, its metadata and the Modrinth version all carry the tag's number.
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.number }}
+        run: ./gradlew build -Pmod_version="$VERSION"
+
+      - name: Publish to Modrinth and the GitHub release
+        uses: Kira-NT/mc-publish@c23376546a97f5ba7984e94445da359459b14419 # v3.3.2
+        with:
+          modrinth-id: ${{ vars.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+          files: build/libs/!(*-@(dev|sources|javadoc)).jar
+          name: Create Force Fields ${{ steps.version.outputs.number }}
+          version: ${{ steps.version.outputs.number }}
+          version-type: ${{ steps.version.outputs.type }}
+          changelog: ${{ github.event.release.body }}
+
+          loaders: neoforge
+          game-versions: 1.21.1
+          java: 21
+          dependencies: |
+            create(required)
+            sable(optional)
