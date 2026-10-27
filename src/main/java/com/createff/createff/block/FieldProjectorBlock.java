@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.createff.createff.field.Field;
 import com.createff.createff.field.FieldAdmin;
+import com.createff.createff.field.FieldLimits;
 import com.createff.createff.field.FieldManager;
 import com.createff.createff.field.FieldState;
 import com.createff.createff.registry.Registration;
@@ -21,6 +22,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
@@ -41,6 +43,16 @@ public class FieldProjectorBlock extends RotatedPillarKineticBlock implements IB
     @Override
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
         return face.getAxis() == state.getValue(AXIS);
+    }
+
+    /** The server refuses a projector that would take a player over the limit of fields they may own. */
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        if (state != null && context.getPlayer() instanceof ServerPlayer player && !FieldLimits.mayPlace(player)) {
+            return null;
+        }
+        return state;
     }
 
     @Override

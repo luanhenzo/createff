@@ -8,6 +8,7 @@ public class Config {
 
     public static final ModConfigSpec.IntValue DEFAULT_EXTENT;
     public static final ModConfigSpec.IntValue MAX_EXTENT;
+    public static final ModConfigSpec.IntValue MAX_FIELDS_PER_PLAYER;
 
     public static final ModConfigSpec.DoubleValue MIN_RPM;
     public static final ModConfigSpec.DoubleValue MAX_EFFECTIVE_RPM;
@@ -77,6 +78,8 @@ public class Config {
                 .defineInRange("defaultExtent", 8, 1, 256);
         MAX_EXTENT = BUILDER.comment("Maximum blocks the field may extend from the core on any side")
                 .defineInRange("maxExtent", 64, 1, 256);
+        MAX_FIELDS_PER_PLAYER = BUILDER.comment("Force fields one player may own at once, in every dimension. Operators in creative mode are exempt. 0 means no limit")
+                .defineInRange("maxFieldsPerPlayer", 3, 0, 1000);
         BUILDER.pop();
 
         BUILDER.push("power");

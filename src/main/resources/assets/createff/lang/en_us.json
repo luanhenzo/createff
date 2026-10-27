@@ -8,6 +8,7 @@
   "message.createff.restart_in": " | Restarts in %s s",
   "message.createff.no_power": " | Needs power to cool down",
   "message.createff.protected": "This area is protected by a force field",
+  "message.createff.field_limit": "You already own %s force fields, the most this server allows",
   "message.createff.overlap": "This field would overlap another force field",
   "command.createff.not_in_field": "You are not standing inside a force field",
   "command.createff.owner_set": "%1$s is now the owner of the field at %2$s, %3$s, %4$s",
