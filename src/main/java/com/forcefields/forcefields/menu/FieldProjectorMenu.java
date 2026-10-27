@@ -20,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
  * core's tier gives are usable), and the player's inventory. The control tabs of the screen are not part of the
  * menu; only the Core tab shows these slots.
  */
-public class FieldProjectorMenu extends AbstractContainerMenu {
+public final class FieldProjectorMenu extends AbstractContainerMenu {
     public static final int CORE_SLOT = 0;
     public static final int FIRST_UPGRADE = 1;
     public static final int FIRST_PLAYER = FIRST_UPGRADE + UpgradeContainer.MAX_SLOTS;

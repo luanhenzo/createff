@@ -3,7 +3,6 @@ package com.forcefields.forcefields.field;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 
-import org.jetbrains.annotations.Nullable;
 
 import com.forcefields.forcefields.Config;
 import com.forcefields.forcefields.block.FieldProjectorBlock;

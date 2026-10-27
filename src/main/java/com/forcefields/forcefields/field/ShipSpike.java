@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
+import net.minecraft.core.Position;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -19,7 +20,7 @@ final class ShipSpike {
         SableCompanion sable = SableCompanion.INSTANCE;
         boolean plot = sable.isInPlotGrid(level, pos);
         SubLevelAccess ship = sable.getContaining(level, pos);
-        Vec3 world = sable.projectOutOfSubLevel(level, pos);
+        Vec3 world = sable.projectOutOfSubLevel(level, (Position) pos);
         return String.format(Locale.ROOT, "at=%s inPlotGrid=%s ship=%s worldPos=%s", fmt(pos), plot, ship(ship), fmt(world));
     }
 
