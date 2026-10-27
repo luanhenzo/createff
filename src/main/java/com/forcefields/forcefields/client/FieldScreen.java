@@ -15,7 +15,6 @@ import com.forcefields.forcefields.field.FieldAdmin;
 import com.forcefields.forcefields.field.FieldSettings;
 import com.forcefields.forcefields.field.FieldShape;
 import com.forcefields.forcefields.field.FieldState;
-import com.forcefields.forcefields.field.Role;
 import com.forcefields.forcefields.menu.FieldProjectorMenu;
 import com.forcefields.forcefields.network.FieldChange;
 
@@ -139,11 +138,6 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
     private boolean canEdit(FieldProjectorBlockEntity core) {
         Player player = minecraft.player;
         return player != null && FieldAdmin.canManage(core.mirrorSettings(), core.ownerUuid(), player);
-    }
-
-    private Role myRole(FieldProjectorBlockEntity core) {
-        Player player = minecraft.player;
-        return player == null ? Role.OTHER : core.mirrorSettings().roleOf(player.getUUID(), core.ownerUuid());
     }
 
     private int panelHeight() {

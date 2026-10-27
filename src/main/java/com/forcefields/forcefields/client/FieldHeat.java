@@ -45,7 +45,6 @@ public final class FieldHeat {
         BlockPos shipCore = null;
         Vec3 onShip = null;
         double nearest = Double.MAX_VALUE;
-        BlockPos nearestCore = null;
         for (FieldProjectorBlockEntity core : FieldProjectorBlockEntity.CLIENT_CORES) {
             if (core.getLevel() != level) {
                 continue;
@@ -54,7 +53,6 @@ public final class FieldHeat {
             double distance = world.isSphere() ? Math.abs(at.distanceTo(world.center()) - world.sphereRadius()) : world.distanceTo(at);
             if (distance < nearest) {
                 nearest = distance;
-                nearestCore = core.getBlockPos();
                 Vec3 local = ShipSupport.toPlot(level, core.fieldShape(), at);
                 shipCore = local == null ? null : core.getBlockPos();
                 onShip = local;

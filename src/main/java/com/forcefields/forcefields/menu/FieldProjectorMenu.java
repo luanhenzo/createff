@@ -51,7 +51,6 @@ public final class FieldProjectorMenu extends AbstractContainerMenu {
 
     private final BlockPos pos;
     private final boolean canEdit;
-    private final Container coreContainer;
     private final UpgradeContainer upgrades;
     /** Only the client changes this, to hide the slots on tabs that do not use them. */
     private boolean slotsVisible = true;
@@ -70,7 +69,6 @@ public final class FieldProjectorMenu extends AbstractContainerMenu {
         super(Registration.FIELD_PROJECTOR_MENU.get(), id);
         this.pos = pos;
         this.canEdit = canEdit;
-        this.coreContainer = coreContainer;
         this.upgrades = new UpgradeContainer(coreContainer);
 
         addSlot(new CoreSlot(coreContainer, CORE_X, CORE_Y));

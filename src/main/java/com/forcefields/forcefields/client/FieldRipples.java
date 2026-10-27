@@ -85,7 +85,6 @@ public final class FieldRipples {
     /** One ripple: where it is on the field (in the field's own space, the ship's plot for a ship), and its heights. */
     private static final class Ripple {
         final BlockPos core;
-        final FieldShape plot;
         /** The grid's points on the wall, in the field's own space; null where the grid runs off the wall. */
         final Vec3[][] points = new Vec3[N][N];
         final Vec3[][] normals = new Vec3[N][N];
@@ -103,7 +102,6 @@ public final class FieldRipples {
             this.lifetime = Math.min(90, (int) (LIFETIME + 18 * size));
             this.gain = Mth.clamp(0.7F + 0.45F * size, 0.7F, 2.0F);
             this.core = core;
-            this.plot = plot;
             this.origin = at;
             this.size = size;
             Vec3 up = Math.abs(normal.y) < 0.9 ? new Vec3(0, 1, 0) : new Vec3(1, 0, 0);
