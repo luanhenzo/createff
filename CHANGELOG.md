@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Hoppers, hopper minecarts and any block that asks for a container's items or fluids (funnels, chutes, belts,
+  mechanical arms, pipes of other mods) cannot reach a container inside a field they are not in. Blocks inside the
+  field, and blocks taking things from inside to outside, are not affected. `blockTransfersAcrossWalls` in the config
+  turns it off.
+- A limit of force fields per player: 3 by default, `maxFieldsPerPlayer` in the config, 0 for no limit. Operators in
+  creative mode are exempt. It is per player, not per faction, because the mod has no factions of its own.
+
+### Known issues
+
+- A projector on a Create contraption (bearing, piston, gantry, cart) has no field while the contraption moves, and
+  gets it back when it stops. Fields on Sable ships are not affected.
+- Transfers that do not happen during a block entity's tick (entities, moving contraptions, redstone pulses) are not
+  stopped from reaching a container inside a field. Energy is not blocked, so cables can still bring power in.
+
 ## 0.1.0 (beta)
 
 First playable version.

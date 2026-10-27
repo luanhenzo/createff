@@ -42,7 +42,8 @@ Install the jar on **both the server and the clients**: the wall is predicted on
 - **Who gets through**: the owner, admins and trusted players pass; everyone else meets a solid wall. Inside, blocks
   behave like bedrock for outsiders, with per-field rules for who may place, break and enter, plus allow-lists of
   blocks and items anyone may use. Pistons, fluids, dispensers, fire, ender pearls and mob griefing are kept out of
-  claimed land.
+  claimed land, and so are blocks that move items or fluids out of containers inside it (hoppers, funnels, chutes,
+  pipes). A player may own 3 fields at once by default.
 - **Ships**: with Sable, a field on a ship moves with it. Ships that are not allowed in are pushed back, and fields of
   different ships push each other apart.
 - **Visuals**: heat map where the wall was hit, ripples when something crosses or hits it, scaled to the blow.
