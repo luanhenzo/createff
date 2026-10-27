@@ -39,6 +39,7 @@ public final class Registration {
                     .mapColor(MapColor.COLOR_CYAN)
                     .strength(10.0F, 60.0F)
                     .sound(SoundType.NETHERITE_BLOCK)
+                    .noOcclusion()
                     .lightLevel(state -> 8)));
 
     public static final DeferredItem<BlockItem> FIELD_PROJECTOR_ITEM = ITEMS.registerSimpleBlockItem("field_projector", FIELD_PROJECTOR);

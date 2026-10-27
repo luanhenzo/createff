@@ -56,6 +56,8 @@ public class FieldProjectorBlockEntity extends KineticBlockEntity {
     private FieldState mirrorState = FieldState.OFFLINE;
     private float mirrorOverload;
     private FieldSettings mirrorSettings = new FieldSettings();
+    /** The force core as the client knows it, to draw it inside the glass. */
+    private ItemStack mirrorCore = ItemStack.EMPTY;
 
     // Server-side bookkeeping for change detection.
     /** The force core. Its upgrades live in the item; the field gets a summary whenever this changes. */
@@ -339,6 +341,10 @@ public class FieldProjectorBlockEntity extends KineticBlockEntity {
         return mirrorSettings;
     }
 
+    public ItemStack mirrorCore() {
+        return mirrorCore;
+    }
+
     @Nullable
     public UUID ownerUuid() {
         return owner;
@@ -374,6 +380,10 @@ public class FieldProjectorBlockEntity extends KineticBlockEntity {
         if (!clientPacket && !coreSlot.getItem(0).isEmpty()) {
             compound.put("Core", coreSlot.getItem(0).save(registries));
         }
+        if (clientPacket && !coreSlot.getItem(0).isEmpty()) {
+            // Only the item itself: the client draws it, and the upgrades inside are not its business.
+            compound.put("CoreShown", new ItemStack(coreSlot.getItem(0).getItem()).save(registries));
+        }
         if (!clientPacket && level instanceof ServerLevel serverLevel) {
             // The field travels with the projector, so moving it (into a ship, say) does not lose the settings.
             Field field = FieldManager.get(serverLevel).get(worldPosition);
@@ -406,6 +416,11 @@ public class FieldProjectorBlockEntity extends KineticBlockEntity {
                     ? ItemStack.parseOptional(registries, compound.getCompound("Core"))
                     : ItemStack.EMPTY);
             loadingCore = false;
+        }
+        if (clientPacket) {
+            mirrorCore = compound.contains("CoreShown")
+                    ? ItemStack.parseOptional(registries, compound.getCompound("CoreShown"))
+                    : ItemStack.EMPTY;
         }
         if (clientPacket && compound.contains("FieldState")) {
             int[] extents = compound.getIntArray("FieldExtents");

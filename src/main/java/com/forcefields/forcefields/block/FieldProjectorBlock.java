@@ -7,7 +7,7 @@ import com.forcefields.forcefields.field.FieldAdmin;
 import com.forcefields.forcefields.field.FieldManager;
 import com.forcefields.forcefields.field.FieldState;
 import com.forcefields.forcefields.registry.Registration;
-import com.simibubi.create.content.kinetics.base.KineticBlock;
+import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 
 import net.minecraft.core.BlockPos;
@@ -28,19 +28,19 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class FieldProjectorBlock extends KineticBlock implements IBE<FieldProjectorBlockEntity> {
+public class FieldProjectorBlock extends RotatedPillarKineticBlock implements IBE<FieldProjectorBlockEntity> {
     public FieldProjectorBlock(Properties properties) {
         super(properties);
     }
 
     @Override
     public Direction.Axis getRotationAxis(BlockState state) {
-        return Direction.Axis.Y;
+        return state.getValue(AXIS);
     }
 
     @Override
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
-        return face.getAxis() == Direction.Axis.Y;
+        return face.getAxis() == state.getValue(AXIS);
     }
 
     @Override
