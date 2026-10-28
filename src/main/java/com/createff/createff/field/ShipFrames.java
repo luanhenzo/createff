@@ -3,7 +3,12 @@ package com.createff.createff.field;
 import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -69,7 +74,29 @@ final class ShipFrames {
         return onShip -> pose.transformPosition(onShip);
     }
 
+    /**
+     * How far from {@code from} the line to {@code to} first meets a block of a ship, or -1 if it meets none. The blocks of
+     * a ship are kept in a plot far from the world, so the game's own ray does not find them: the line is followed in
+     * the space of each ship it passes near instead.
+     */
+    static double firstShipBlock(Level level, Vec3 from, Vec3 to, Entity context) {
+        BoundingBox3d around = new BoundingBox3d(Math.min(from.x, to.x), Math.min(from.y, to.y), Math.min(from.z, to.z),
+                Math.max(from.x, to.x), Math.max(from.y, to.y), Math.max(from.z, to.z));
+        double nearest = -1.0;
+        for (SubLevelAccess ship : SableCompanion.INSTANCE.getAllIntersecting(level, around)) {
+            Pose3dc pose = ship.logicalPose();
+            BlockHitResult hit = level.clip(new ClipContext(pose.transformPositionInverse(from), pose.transformPositionInverse(to),
+                    ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, context));
+            if (hit.getType() == HitResult.Type.BLOCK) {
+                double distance = from.distanceTo(pose.transformPosition(hit.getLocation()));
+                nearest = nearest < 0.0 ? distance : Math.min(nearest, distance);
+            }
+        }
+        return nearest;
+    }
+
     /** The field as the ship's pose puts it in the world: a sphere only moves, a cube is carried and turned. */
+
     private static FieldShape sphere(Pose3dc pose, FieldShape plot) {
         double scale = pose.scale().x();
         if (plot.isSphere()) {

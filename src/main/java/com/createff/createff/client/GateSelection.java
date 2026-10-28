@@ -12,6 +12,7 @@ import com.createff.createff.field.FieldShape;
 import com.createff.createff.field.FieldState;
 import com.createff.createff.field.Gate;
 import com.createff.createff.field.Gates;
+import com.createff.createff.field.ShipSupport;
 import com.createff.createff.network.GateChange;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.gui.AllIcons;
@@ -24,6 +25,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -97,9 +99,15 @@ public final class GateSelection {
             }
             Vec3 point = aimed.get();
             double distance = eye.distanceTo(point);
-            // A block in front of the wall is in the way.
-            if (minecraft.hitResult instanceof BlockHitResult block && block.getType() == HitResult.Type.BLOCK
-                    && eye.distanceTo(block.getLocation()) < distance - 0.01) {
+            // A block in front of the wall is in the way, however far it is: the pick the game makes only reaches as far as
+            // the hands do, so the line to the wall is followed here.
+            BlockHitResult blocked = minecraft.level.clip(new ClipContext(eye, point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+            if (blocked.getType() == HitResult.Type.BLOCK && eye.distanceTo(blocked.getLocation()) < distance - 0.05) {
+                continue;
+            }
+            // The blocks of a ship are in the way too, though the game's ray does not see them.
+            double ship = ShipSupport.firstShipBlock(minecraft.level, eye, point, player);
+            if (ship >= 0.0 && ship < distance - 0.05) {
                 continue;
             }
             for (Gate gate : core.mirrorSettings().gates()) {

@@ -57,7 +57,17 @@ public final class ShipSupport {
         return available() ? ShipFrames.toWorldMapper(level, plot, renderPartial) : null;
     }
 
+    /**
+     * How far from {@code from} the line to {@code to} first meets a block of a ship, or -1 if it meets none, or there are
+     * no ships. Meant for telling whether a ship is in the way, which the game's own ray cannot.
+     */
+    public static double firstShipBlock(Level level, net.minecraft.world.phys.Vec3 from, net.minecraft.world.phys.Vec3 to,
+            net.minecraft.world.entity.Entity context) {
+        return available() ? ShipFrames.firstShipBlock(level, from, to, context) : -1.0;
+    }
+
     /** Pushes ships that may not enter back out of the fields that do not let them in. Does nothing without Sable. */
+
     public static void repel(net.minecraft.server.level.ServerLevel level, java.util.Collection<Field> fields) {
         if (available() && com.createff.createff.Config.REPEL_SHIPS.get()) {
             ShipRepulsion.tick(level, fields);
