@@ -3,6 +3,8 @@ package com.createff.createff.registry;
 import com.createff.createff.CreateFF;
 import com.createff.createff.block.FieldProjectorBlock;
 import com.createff.createff.block.FieldProjectorBlockEntity;
+import com.createff.createff.block.GateControllerBlock;
+import com.createff.createff.block.GateControllerBlockEntity;
 
 import com.createff.createff.item.ForceCoreItem;
 import com.createff.createff.item.UpgradeItem;
@@ -44,6 +46,16 @@ public final class Registration {
 
     public static final DeferredItem<BlockItem> FIELD_PROJECTOR_ITEM = ITEMS.registerSimpleBlockItem("field_projector", FIELD_PROJECTOR);
 
+    /** Opens and shuts a gate of a field with redstone. */
+    public static final DeferredBlock<GateControllerBlock> GATE_CONTROLLER = BLOCKS.register("gate_controller",
+            () -> new GateControllerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.GOLD)
+                    .strength(2.0F, 6.0F)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()));
+    public static final DeferredItem<BlockItem> GATE_CONTROLLER_ITEM = ITEMS.registerSimpleBlockItem("gate_controller", GATE_CONTROLLER);
+
+
     public static final DeferredItem<ForceCoreItem> FORCE_CORE_BASIC =
             ITEMS.registerItem("force_core_basic", properties -> new ForceCoreItem(properties, ForceCoreItem.Tier.BASIC));
     public static final DeferredItem<ForceCoreItem> FORCE_CORE_ADVANCED =
@@ -65,6 +77,11 @@ public final class Registration {
             BLOCK_ENTITIES.register("field_projector",
                     () -> BlockEntityType.Builder.of(FieldProjectorBlockEntity::new, FIELD_PROJECTOR.get()).build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GateControllerBlockEntity>> GATE_CONTROLLER_BE =
+            BLOCK_ENTITIES.register("gate_controller",
+                    () -> BlockEntityType.Builder.of(GateControllerBlockEntity::new, GATE_CONTROLLER.get()).build(null));
+
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.createff"))
@@ -77,6 +94,7 @@ public final class Registration {
                         output.accept(RESISTANCE_UPGRADE.get());
                         output.accept(VEIL_UPGRADE.get());
                         output.accept(AEGIS_UPGRADE.get());
+                        output.accept(GATE_CONTROLLER_ITEM.get());
                     })
                     .build());
 

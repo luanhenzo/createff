@@ -1,0 +1,26 @@
+{
+	"parent": "minecraft:block/cube",
+	"textures": {
+		"particle": "create:block/brass_casing",
+		"down": "create:block/brass_casing",
+		"up": "create:block/brass_block",
+		"north": "create:block/brass_casing",
+		"south": "create:block/brass_casing",
+		"west": "create:block/brass_casing",
+		"east": "create:block/brass_casing"
+	},
+	"elements": [
+		{
+			"from": [ 3, 0, 3 ],
+			"to": [ 13, 8, 13 ],
+			"faces": {
+				"down": { "uv": [ 3, 3, 13, 13 ], "texture": "#down" },
+				"up": { "uv": [ 3, 3, 13, 13 ], "texture": "#up" },
+				"north": { "uv": [ 3, 8, 13, 16 ], "texture": "#north" },
+				"south": { "uv": [ 3, 8, 13, 16 ], "texture": "#south" },
+				"west": { "uv": [ 3, 8, 13, 16 ], "texture": "#west" },
+				"east": { "uv": [ 3, 8, 13, 16 ], "texture": "#east" }
+			}
+		}
+	]
+}
