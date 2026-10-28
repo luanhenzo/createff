@@ -4,6 +4,22 @@
 
 ### Added
 
+- Gates: the owner and admins cut openings in the wall of a field from the Gates tab of the projector screen. Aim at
+  the wall, use to put the gate there, attack to cancel; the outline is drawn with Create's outliner, green when the
+  player is close enough to change the field and red when not. A gate is a rectangle or an oval, up to
+  `gateMaxWidth` by `gateMaxHeight` blocks, on a cube or a sphere, in a wall, a roof or a floor. Where it is open the
+  wall is not there: people, mobs, arrows and blasts go through, whatever the entry rule says, while the protection of
+  blocks and the rules for using things inside stay. The wall does not ripple, or ring, in the opening. A gate can be
+  moved, resized, changed between the outlines, shut and opened again, and removed; `maxGatesPerField` in the config
+  limits how many a field has (4 by default, 0 turns them off).
+  On a cube a new gate snaps to the grid of blocks (hold shift to place it freely). Every gate has a glowing border
+  that burns brighter while something is in the opening, and a dim red one when the gate is shut. With Create's
+  wrench in hand, looking at a gate picks it: a list on the screen, like the one of the schematic tools, offers to move
+  it, shut or open it, change its outline and remove it (it asks to be used twice, to be sure); the scroll wheel, with alt held, goes through it and use does the one chosen.
+- Gate Controller: a block that opens and shuts one gate of a field with redstone. Used with an empty hand it goes
+  through the gates of the field it stands in or near, and used while sneaking it turns its signal round. Only
+  someone who may change the field can pick its gate.
+- Brazilian Portuguese translation (`pt_br`). Shape and side names in messages and commands are translated too.
 - Hoppers, hopper minecarts and any block that asks for a container's items or fluids (funnels, chutes, belts,
   mechanical arms, pipes of other mods) cannot reach a container inside a field they are not in. Blocks inside the
   field, and blocks taking things from inside to outside, are not affected. `blockTransfersAcrossWalls` in the config
@@ -13,6 +29,7 @@
 
 ### Known issues
 
+- Gates do not work in the wall of a field on a Sable ship.
 - A projector on a Create contraption (bearing, piston, gantry, cart) has no field while the contraption moves, and
   gets it back when it stops. Fields on Sable ships are not affected.
 - Transfers that do not happen during a block entity's tick (entities, moving contraptions, redstone pulses) are not

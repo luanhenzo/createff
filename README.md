@@ -44,6 +44,19 @@ Install the jar on **both the server and the clients**: the wall is predicted on
   blocks and items anyone may use. Pistons, fluids, dispensers, fire, ender pearls and mob griefing are kept out of
   claimed land, and so are blocks that move items or fluids out of containers inside it (hoppers, funnels, chutes,
   pipes). A player may own 3 fields at once by default.
+- **Gates**: the owner and admins cut openings in the wall in the Gates tab of the projector screen. Aim at the wall,
+  use to put the gate there and attack to cancel; the outline is drawn as Create does for a super glue, green when
+  you are close enough to change the field and red when not. On a cube the gate snaps to the grid of blocks, so a
+  frame built around it lines up; hold shift to place it freely. A gate is a rectangle or an oval, of any size up to
+  `gateMaxWidth` by `gateMaxHeight`, on a cube or a sphere, in a wall, a roof or a floor. Where it is open there is no
+  wall: people, mobs, arrows and blasts go through as if it was not there, whatever the entry rule says, and nothing
+  ripples or rings. A glowing border runs round every gate (a dim red one when it is shut) and burns brighter while
+  something is in the opening. With Create's wrench in hand, look at a gate to pick it: a list of what can be done to it shows on the
+  screen, as for the schematic tools; the scroll wheel, with alt held, goes through it (move, shut or open, change the outline, remove, which asks to be used twice) and
+  use does the one chosen. A **Gate Controller** opens and shuts a gate with redstone: use it with an empty hand to go
+  through the gates of the field it stands in or near, sneak and use to turn its signal round (power opens by
+  default). It is meant for decoration, such as an entrance to a town: the protection of blocks and the rules for
+  using things inside the field still hold. A field may have `maxGatesPerField` gates (4 by default).
 - **Ships**: with Sable, a field on a ship moves with it. Ships that are not allowed in are pushed back, and fields of
   different ships push each other apart.
 - **Visuals**: heat map where the wall was hit, ripples when something crosses or hits it, scaled to the blow.
@@ -66,6 +79,7 @@ Install the jar on **both the server and the clients**: the wall is predicted on
 | Elite Force Core | precision mechanisms, netherite ingots, advanced core |
 | Resistance Upgrade | obsidian, diamonds, ender pearl |
 | Veil Upgrade | glass, phantom membrane, ender pearl |
+| Gate Controller | redstone, ender pearl and a brass ingot, in a column |
 
 ## Commands
 
