@@ -21,6 +21,7 @@ import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Vector3d;
@@ -65,7 +66,7 @@ final class ShipRepulsion {
                 if (ship.isRemoved() || (own != null && own.getUniqueId().equals(ship.getUniqueId()))) {
                     continue;
                 }
-                if (!ship.boundingBox().intersects(shape.bounds()) || mayEnter(level, ship, field)) {
+                if (!ship.boundingBox().intersects(shape.bounds()) || mayEnter(level, ship, field) || fitsGate(field, shape, ship)) {
                     continue;
                 }
                 push(level, field, shape, ship);
@@ -194,7 +195,18 @@ final class ShipRepulsion {
         handle.applyLinearImpulse(local);
     }
 
+    /** Whether the ship is at a gate that is open and is no bigger than the outline of it, so it may go through. */
+    private static boolean fitsGate(Field field, FieldShape shape, ServerSubLevel ship) {
+        if (field.settings().gates().isEmpty()) {
+            return false;
+        }
+        BoundingBox3dc box = ship.boundingBox();
+        return Gates.admits(field.settings().gates(), shape,
+                new AABB(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()));
+    }
+
     /** Whether the people aboard let the ship in: someone is aboard, and each of them may enter. */
+
     private static boolean mayEnter(ServerLevel level, ServerSubLevel ship, Field field) {
         boolean anyone = false;
         UUID id = ship.getUniqueId();

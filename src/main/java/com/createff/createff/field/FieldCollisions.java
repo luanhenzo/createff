@@ -95,6 +95,10 @@ public final class FieldCollisions {
         if (shape.contains(box.getCenter()) || isExempt(entity, settings, owner)) {
             return walls;
         }
+        // A gate leaves the wall open where its frame is, for whoever is there.
+        if (!settings.gates().isEmpty() && Gates.opens(settings.gates(), shape, sweep)) {
+            return walls;
+        }
         if (walls == null) {
             walls = new ArrayList<>(1);
         }

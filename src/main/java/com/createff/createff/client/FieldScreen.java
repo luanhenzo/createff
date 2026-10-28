@@ -15,8 +15,10 @@ import com.createff.createff.field.FieldAdmin;
 import com.createff.createff.field.FieldSettings;
 import com.createff.createff.field.FieldShape;
 import com.createff.createff.field.FieldState;
+import com.createff.createff.field.Gate;
 import com.createff.createff.menu.FieldProjectorMenu;
 import com.createff.createff.network.FieldChange;
+import com.createff.createff.network.GateChange;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -46,6 +48,7 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
     private static final int MARGIN = 12;
     private static final int ROWS = 5;
     private static final int ROW_HEIGHT = 18;
+    private static final int GATE_ROWS = 3;
     private static final long MESSAGE_MILLIS = 6000;
 
     // Vanilla container colors.
@@ -60,7 +63,7 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
     private static final int BAD = 0xFFB00000;
 
     private enum Tab {
-        CORE, ACCESS, PEOPLE, ALLOWED
+        CORE, ACCESS, PEOPLE, ALLOWED, GATES
     }
 
     /** One reach control of the Core tab: an arrow up, the value, an arrow down. [x, y] is its top left corner. */
@@ -99,6 +102,8 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
     private final BlockPos corePos;
     private Tab tab = Tab.CORE;
     private int page;
+    /** The gate picked in the Gates tab, or -1. */
+    private int selectedGate = -1;
     private String draft = "";
     private EditBox input;
     private FieldChange.Kind addKindForEnter;
@@ -118,7 +123,7 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
     }
 
     public static void showMessage(boolean ok, String key, List<String> args) {
-        lastMessage = Component.translatable(key, args.toArray());
+        lastMessage = Component.translatable(key, FieldAdmin.arguments(args));
         lastMessageOk = ok;
         lastMessageTime = System.currentTimeMillis();
     }
@@ -196,6 +201,7 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
             case ACCESS -> buildAccess(core, edit);
             case PEOPLE -> buildPeople(core, edit);
             case ALLOWED -> buildAllowed(core, edit);
+            case GATES -> buildGates(core, edit);
             default -> {
             }
         }
@@ -495,6 +501,7 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
             case ACCESS -> drawAccess(graphics);
             case PEOPLE -> drawPeople(graphics, core);
             case ALLOWED -> drawAllowed(graphics, core);
+            case GATES -> drawGates(graphics, core);
         }
         if (tab != Tab.CORE) {
             if (!canEdit(core)) {
@@ -659,7 +666,141 @@ public class FieldScreen extends AbstractContainerScreen<FieldProjectorMenu> {
         text(graphics, Component.literal((page + 1) + " / " + pages), left + MARGIN + 28, top + 130, TEXT);
     }
 
+    /**
+     * The openings in the wall: a list to pick one from, and for the one picked its size, outline, whether it is open,
+     * and buttons to move or remove it. A new one is put where the player aims once the screen is closed.
+     */
+    private void buildGates(FieldProjectorBlockEntity core, boolean edit) {
+        input = null;
+        addKindForEnter = null;
+        List<Gate> gates = core.mirrorSettings().gates();
+        int pages = Math.max(1, (gates.size() + GATE_ROWS - 1) / GATE_ROWS);
+        page = Math.max(0, Math.min(page, pages - 1));
+        if (selectedGate >= gates.size()) {
+            selectedGate = gates.size() - 1;
+        }
+        int innerWidth = PANEL_W - 2 * MARGIN;
+
+        for (int row = 0; row < GATE_ROWS; row++) {
+            int index = page * GATE_ROWS + row;
+            if (index >= gates.size()) {
+                break;
+            }
+            Gate gate = gates.get(index);
+            Component label = Component.translatable("gui.createff.gates.row", gate.id(), sizeText(gate.width()), sizeText(gate.height()),
+                    Component.translatable("gate.createff.shape." + gate.shape().key()),
+                    Component.translatable(gate.open() ? "gui.createff.gates.open" : "gui.createff.gates.shut"));
+            Button pick = Button.builder(label, pressed -> {
+                selectedGate = index;
+                rebuildWidgets();
+            }).bounds(left + MARGIN, top + 30 + row * ROW_HEIGHT, innerWidth, 16).build();
+            pick.active = index != selectedGate;
+            addRenderableWidget(pick);
+        }
+
+        Button previous = Button.builder(Component.literal("<"), pressed -> {
+            page--;
+            rebuildWidgets();
+        }).bounds(left + MARGIN, top + 88, 20, 16).build();
+        previous.active = page > 0;
+        addRenderableWidget(previous);
+        Button next = Button.builder(Component.literal(">"), pressed -> {
+            page++;
+            rebuildWidgets();
+        }).bounds(left + MARGIN + 66, top + 88, 20, 16).build();
+        next.active = page < pages - 1;
+        addRenderableWidget(next);
+
+        Button add = Button.builder(Component.translatable("gui.createff.gates.add"), pressed -> startPlacing(-1))
+                .bounds(left + PANEL_W - MARGIN - 90, top + 87, 90, 18).build();
+        add.active = edit && gates.size() < Config.MAX_GATES_PER_FIELD.get();
+        addRenderableWidget(add);
+
+        if (selectedGate < 0 || selectedGate >= gates.size()) {
+            return;
+        }
+        Gate gate = gates.get(selectedGate);
+        int chosen = selectedGate;
+        int maxWidth = Config.GATE_MAX_WIDTH.get();
+        int maxHeight = Config.GATE_MAX_HEIGHT.get();
+        // Width and height, each with a minus and a plus on the right.
+        for (int line = 0; line < 2; line++) {
+            boolean width = line == 0;
+            double value = width ? gate.width() : gate.height();
+            double limit = width ? maxWidth : maxHeight;
+            int y = top + 112 + line * 20;
+            Button less = Button.builder(Component.literal("-"), pressed -> resizeGate(chosen, gate, width, -step()))
+                    .bounds(left + PANEL_W - MARGIN - 18 - 40 - 18, y, 18, 16).build();
+            less.active = edit && value > 1.0;
+            addRenderableWidget(less);
+            Button more = Button.builder(Component.literal("+"), pressed -> resizeGate(chosen, gate, width, step()))
+                    .bounds(left + PANEL_W - MARGIN - 18, y, 18, 16).build();
+            more.active = edit && value < limit;
+            addRenderableWidget(more);
+        }
+
+        int buttonWidth = (innerWidth - 3 * 4) / 4;
+        int y = top + 154;
+        addGateButton(0, y, buttonWidth, "gate.createff.shape." + gate.shape().key(), edit,
+                () -> PacketDistributor.sendToServer(GateChange.of(corePos, GateChange.Kind.SHAPE, chosen)));
+        addGateButton(1, y, buttonWidth, gate.open() ? "gui.createff.gates.shut_button" : "gui.createff.gates.open_button", edit,
+                () -> PacketDistributor.sendToServer(GateChange.of(corePos, GateChange.Kind.OPEN, chosen)));
+        addGateButton(2, y, buttonWidth, "gui.createff.gates.move", edit, () -> startPlacing(chosen));
+        addGateButton(3, y, buttonWidth, "gui.createff.gates.remove", edit, () -> {
+            PacketDistributor.sendToServer(GateChange.of(corePos, GateChange.Kind.REMOVE, chosen));
+            selectedGate = -1;
+        });
+    }
+
+    private void addGateButton(int column, int y, int width, String key, boolean edit, Runnable action) {
+        Button button = Button.builder(Component.translatable(key), pressed -> action.run())
+                .bounds(left + MARGIN + column * (width + 4), y, width, 18).build();
+        button.active = edit;
+        addRenderableWidget(button);
+    }
+
+    /** Shift moves a size by half a block, otherwise by a whole one. */
+    private static double step() {
+        return net.minecraft.client.gui.screens.Screen.hasShiftDown() ? 0.5 : 1.0;
+    }
+
+    private void resizeGate(int index, Gate gate, boolean width, double delta) {
+        double newWidth = width ? gate.width() + delta : gate.width();
+        double newHeight = width ? gate.height() : gate.height() + delta;
+        PacketDistributor.sendToServer(GateChange.size(corePos, index, (float) newWidth, (float) newHeight));
+    }
+
+    /** Closes the screen so the player can aim at the wall: {@code index} is the gate to move, or -1 for a new one. */
+    private void startPlacing(int index) {
+        GatePlacement.begin(corePos, index);
+        onClose();
+    }
+
+    private static String sizeText(double blocks) {
+        return blocks == Math.rint(blocks) ? String.valueOf((int) blocks) : String.format(Locale.ROOT, "%.1f", blocks);
+    }
+
+    private void drawGates(GuiGraphics graphics, FieldProjectorBlockEntity core) {
+        List<Gate> gates = core.mirrorSettings().gates();
+        if (gates.isEmpty()) {
+            text(graphics, Component.translatable("gui.createff.empty.gates"), left + MARGIN, top + 34, TEXT_DIM);
+        }
+        int pages = Math.max(1, (gates.size() + GATE_ROWS - 1) / GATE_ROWS);
+        text(graphics, Component.literal((page + 1) + " / " + pages), left + MARGIN + 28, top + 92, TEXT);
+        if (selectedGate >= 0 && selectedGate < gates.size()) {
+            Gate gate = gates.get(selectedGate);
+            text(graphics, Component.translatable("gui.createff.gates.width"), left + MARGIN, top + 116, TEXT);
+            text(graphics, Component.translatable("gui.createff.gates.height"), left + MARGIN, top + 136, TEXT);
+            int valueX = left + PANEL_W - MARGIN - 18 - 40;
+            text(graphics, Component.literal(sizeText(gate.width())), valueX + (40 - font.width(sizeText(gate.width()))) / 2, top + 116, 0xFF000000);
+            text(graphics, Component.literal(sizeText(gate.height())), valueX + (40 - font.width(sizeText(gate.height()))) / 2, top + 136, 0xFF000000);
+        } else if (!gates.isEmpty()) {
+            text(graphics, Component.translatable("gui.createff.gates.pick"), left + MARGIN, top + 116, TEXT_DIM);
+        }
+    }
+
     private void drawAllowed(GuiGraphics graphics, FieldProjectorBlockEntity core) {
+
         List<String[]> entries = allowed(core);
         if (entries.isEmpty()) {
             text(graphics, Component.translatable("gui.createff.empty.allowed"), left + MARGIN, top + 34, TEXT_DIM);

@@ -73,12 +73,14 @@ final class ShipFrames {
     private static FieldShape sphere(Pose3dc pose, FieldShape plot) {
         double scale = pose.scale().x();
         if (plot.isSphere()) {
-            return FieldShape.sphereAt(pose.transformPosition(plot.center()), plot.sphereRadius() * scale);
+            return FieldShape.sphereAt(pose.transformPosition(plot.center()), plot.sphereRadius() * scale, new Quaterniond(pose.orientation()));
         }
         AABB box = plot.bounds();
         Vec3 center = pose.transformPosition(box.getCenter());
         Vec3 half = new Vec3(box.getXsize() / 2 * scale, box.getYsize() / 2 * scale, box.getZsize() / 2 * scale);
-        return FieldShape.orientedBox(plot.core(), center, new Quaterniond(pose.orientation()), half);
+        // Where the projector is in the box, so a gate placed from it stays where it was put when the box is not centred on it.
+        Vec3 coreOffset = Vec3.atCenterOf(plot.core()).subtract(box.getCenter()).scale(scale);
+        return FieldShape.orientedBox(plot.core(), center, new Quaterniond(pose.orientation()), half, coreOffset);
     }
 
     private ShipFrames() {

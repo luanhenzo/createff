@@ -43,9 +43,16 @@ public final class FieldShape {
     @Nullable
     private final Quaterniond inverse;
     private final Vec3 half;
+    /** How the ship a sphere is on is turned, which turns whatever is fixed to the field with it; null off a ship. */
+    @Nullable
+    private final Quaterniond turn;
+    /** For a box turned by a ship: where the projector is, from the middle of the box, along the box's own axes. */
+    private final Vec3 coreOffset;
 
     private FieldShape(Type type, BlockPos core, int[] extents, int radius, Vec3 center, double sphereRadius,
-            @Nullable Quaterniond orientation, Vec3 half) {
+            @Nullable Quaterniond orientation, Vec3 half, @Nullable Quaterniond turn, Vec3 coreOffset) {
+        this.turn = turn == null ? null : new Quaterniond(turn);
+        this.coreOffset = coreOffset;
         this.type = type;
         this.core = core.immutable();
         this.extents = extents.clone();
@@ -66,24 +73,25 @@ public final class FieldShape {
     }
 
     public static FieldShape of(Type type, BlockPos core, int[] extents, int radius) {
-        return new FieldShape(type, core, extents, radius, Vec3.atCenterOf(core), radius + 0.5, null, Vec3.ZERO);
+        return new FieldShape(type, core, extents, radius, Vec3.atCenterOf(core), radius + 0.5, null, Vec3.ZERO, null, Vec3.ZERO);
     }
 
     /**
      * A sphere placed anywhere, for the field of a projector on a ship as it is in the world: the centre follows the
      * ship, and the radius its scale. The only thing it is for is answering where things are relative to the wall.
      */
-    public static FieldShape sphereAt(Vec3 center, double sphereRadius) {
+    public static FieldShape sphereAt(Vec3 center, double sphereRadius, @Nullable Quaterniond turn) {
         BlockPos core = BlockPos.containing(center);
-        return new FieldShape(Type.SPHERE, core, new int[6], (int) Math.round(sphereRadius - 0.5), center, sphereRadius, null, Vec3.ZERO);
+        return new FieldShape(Type.SPHERE, core, new int[6], (int) Math.round(sphereRadius - 0.5), center, sphereRadius, null, Vec3.ZERO,
+                turn, Vec3.ZERO);
     }
 
     /**
      * A cube as it is in the world on a ship: centred at {@code center}, turned by {@code orientation} (the ship's
      * rotation) and with {@code half} as half of its size along each of its own axes.
-     */
-    public static FieldShape orientedBox(BlockPos core, Vec3 center, Quaterniond orientation, Vec3 half) {
-        return new FieldShape(Type.CUBE, core, new int[6], 0, center, 0, new Quaterniond(orientation), half);
+     * {@code coreOffset} is where the projector is from the middle of the box, along the box's own axes.      */
+    public static FieldShape orientedBox(BlockPos core, Vec3 center, Quaterniond orientation, Vec3 half, Vec3 coreOffset) {
+        return new FieldShape(Type.CUBE, core, new int[6], 0, center, 0, new Quaterniond(orientation), half, null, coreOffset);
     }
 
     /** The box of a cube with these reaches, indexed by {@link Direction#get3DDataValue()}. */
@@ -172,7 +180,22 @@ public final class FieldShape {
         return orientation == null ? null : new Quaterniond(orientation);
     }
 
+    /**
+     * How the ship the field is on is turned: for a box, the turn of the box itself, for a sphere the turn of the ship.
+     * Null for a field on the ground. Whatever is fixed to the field, such as a gate, turns with it.
+     */
+    @Nullable
+    public Quaterniond turn() {
+        return orientation != null ? orientation() : turn == null ? null : new Quaterniond(turn);
+    }
+
+    /** For a box turned by a ship, where the projector is from the middle of the box, along the box's own axes. */
+    public Vec3 coreOffset() {
+        return coreOffset;
+    }
+
     /** An oriented box's own axes, as directions in the world. */
+
     public Vec3[] axes() {
         Vector3d x = orientation.transform(new Vector3d(1, 0, 0));
         Vector3d y = orientation.transform(new Vector3d(0, 1, 0));

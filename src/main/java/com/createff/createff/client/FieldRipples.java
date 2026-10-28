@@ -14,6 +14,8 @@ import org.joml.Matrix4f;
 import com.createff.createff.Config;
 import com.createff.createff.CreateFF;
 import com.createff.createff.block.FieldProjectorBlockEntity;
+import com.createff.createff.field.Gate;
+import com.createff.createff.field.Gates;
 import com.createff.createff.field.FieldCollisions;
 import com.createff.createff.field.FieldShape;
 import com.createff.createff.field.FieldState;
@@ -451,6 +453,9 @@ public final class FieldRipples {
 
     /** A blow on the wall at a point in the world: the ripple, and the sound, both as big as the blow. */
     private static void strike(Level level, FieldProjectorBlockEntity core, Vec3 worldPoint, float size) {
+        if (Gates.opensAt(core.mirrorSettings().gates(), core.worldShape(), worldPoint)) {
+            return;
+        }
         // A veiled wall shows where it is struck by the ripple, so it gets one even when ripples are off.
         if (Config.CROSSING_RIPPLES.get() || core.mirrorSettings().veil()) {
             spawn(level, core, worldPoint, size);
@@ -571,6 +576,8 @@ public final class FieldRipples {
         }
         UnaryOperator<Vec3> toWorld = null;
         boolean mapped = false;
+        FieldShape wall = core.worldShape();
+        List<Gate> gates = Gates.opening(core.mirrorSettings().gates(), wall);
         for (Ripple ripple : RIPPLES) {
             if (!ripple.core.equals(core.getBlockPos())) {
                 continue;
@@ -579,12 +586,15 @@ public final class FieldRipples {
                 toWorld = ShipSupport.toWorldMapper(core.getLevel(), core.fieldShape(), partialTick);
                 mapped = true;
             }
-            drawRipple(vc, m, ripple, toWorld, partialTick, red, green, blue);
+            drawRipple(vc, m, ripple, toWorld, gates, wall, partialTick, red, green, blue);
         }
     }
 
+    /** How many pieces each way a cell is cut into where it meets the opening of a gate: the finer, the straighter the edge. */
+    private static final int CUT = 8;
+
     private static void drawRipple(VertexConsumer vc, Matrix4f m, Ripple ripple, @Nullable UnaryOperator<Vec3> toWorld,
-            float partialTick, float red, float green, float blue) {
+            List<Gate> gates, FieldShape wall, float partialTick, float red, float green, float blue) {
         // Halfway between this tick and the next, so the motion is smooth at any frame rate.
         float fade = Mth.clamp(1.0F - (ripple.age + partialTick) / ripple.lifetime, 0.0F, 1.0F);
         for (int i = 0; i < N - 1; i++) {
@@ -598,17 +608,70 @@ public final class FieldRipples {
                 if (Math.max(Math.max(Math.abs(h00), Math.abs(h10)), Math.max(Math.abs(h11), Math.abs(h01))) * fade < 0.03F) {
                     continue;
                 }
-                vertex(vc, m, ripple, toWorld, i, j, p00, h00, fade, red, green, blue);
-                vertex(vc, m, ripple, toWorld, i + 1, j, p10, h10, fade, red, green, blue);
-                vertex(vc, m, ripple, toWorld, i + 1, j + 1, p11, h11, fade, red, green, blue);
-                vertex(vc, m, ripple, toWorld, i, j + 1, p01, h01, fade, red, green, blue);
+                Vec3 n00 = ripple.normals[i][j], n10 = ripple.normals[i + 1][j];
+                Vec3 n11 = ripple.normals[i + 1][j + 1], n01 = ripple.normals[i][j + 1];
+                if (gates.isEmpty() || !meets(gates, wall, p00, p10, p11, p01)) {
+                    vertex(vc, m, ripple, toWorld, p00, n00, h00, fade, red, green, blue);
+                    vertex(vc, m, ripple, toWorld, p10, n10, h10, fade, red, green, blue);
+                    vertex(vc, m, ripple, toWorld, p11, n11, h11, fade, red, green, blue);
+                    vertex(vc, m, ripple, toWorld, p01, n01, h01, fade, red, green, blue);
+                    continue;
+                }
+                // A cell at the edge of an opening is cut into small pieces and the ones in the opening left out, so the
+                // wave stops where the wall does and goes on right up to it.
+                for (int a = 0; a < CUT; a++) {
+                    for (int b = 0; b < CUT; b++) {
+                        double u0 = a / (double) CUT, u1 = (a + 1) / (double) CUT, v0 = b / (double) CUT, v1 = (b + 1) / (double) CUT;
+                        Vec3 middle = at(p00, p10, p11, p01, 0.5 * (u0 + u1), 0.5 * (v0 + v1));
+                        if (inOpening(gates, wall, middle)) {
+                            continue;
+                        }
+                        corner(vc, m, ripple, toWorld, fade, red, green, blue, p00, p10, p11, p01, n00, n10, n11, n01, h00, h10, h11, h01, u0, v0);
+                        corner(vc, m, ripple, toWorld, fade, red, green, blue, p00, p10, p11, p01, n00, n10, n11, n01, h00, h10, h11, h01, u1, v0);
+                        corner(vc, m, ripple, toWorld, fade, red, green, blue, p00, p10, p11, p01, n00, n10, n11, n01, h00, h10, h11, h01, u1, v1);
+                        corner(vc, m, ripple, toWorld, fade, red, green, blue, p00, p10, p11, p01, n00, n10, n11, n01, h00, h10, h11, h01, u0, v1);
+                    }
+                }
             }
         }
     }
 
-    private static void vertex(VertexConsumer vc, Matrix4f m, Ripple ripple, @Nullable UnaryOperator<Vec3> toWorld, int i, int j,
-            Vec3 point, float height, float fade, float red, float green, float blue) {
-        Vec3 lifted = point.add(ripple.normals[i][j].scale(LIFT));
+    /** Whether the cell reaches into the opening of a gate. */
+    private static boolean meets(List<Gate> gates, FieldShape wall, Vec3 p00, Vec3 p10, Vec3 p11, Vec3 p01) {
+        AABB cell = new AABB(p00, p11).minmax(new AABB(p10, p01));
+        for (Gate gate : gates) {
+            if (Gates.gapBounds(gate, wall).intersects(cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean inOpening(List<Gate> gates, FieldShape wall, Vec3 point) {
+        for (Gate gate : gates) {
+            if (Gates.gaps(gate, wall, point)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The point of a cell at {@code u} along its first side and {@code v} along its second. */
+    private static Vec3 at(Vec3 p00, Vec3 p10, Vec3 p11, Vec3 p01, double u, double v) {
+        return p00.lerp(p10, u).lerp(p01.lerp(p11, u), v);
+    }
+
+    /** One corner of a piece of a cell, shaded and lifted as the cell would be there. */
+    private static void corner(VertexConsumer vc, Matrix4f m, Ripple ripple, @Nullable UnaryOperator<Vec3> toWorld,
+            float fade, float red, float green, float blue, Vec3 p00, Vec3 p10, Vec3 p11, Vec3 p01,
+            Vec3 n00, Vec3 n10, Vec3 n11, Vec3 n01, float h00, float h10, float h11, float h01, double u, double v) {
+        float height = (float) Mth.lerp(v, Mth.lerp(u, h00, h10), Mth.lerp(u, h01, h11));
+        vertex(vc, m, ripple, toWorld, at(p00, p10, p11, p01, u, v), at(n00, n10, n11, n01, u, v), height, fade, red, green, blue);
+    }
+
+    private static void vertex(VertexConsumer vc, Matrix4f m, Ripple ripple, @Nullable UnaryOperator<Vec3> toWorld,
+            Vec3 point, Vec3 normal, float height, float fade, float red, float green, float blue) {
+        Vec3 lifted = point.add(normal.scale(LIFT));
         Vec3 world = toWorld == null ? lifted : toWorld.apply(lifted);
         float v = Mth.clamp(height * fade, -1.0F, 1.0F);
         float r, g, b;
@@ -628,6 +691,7 @@ public final class FieldRipples {
         vc.addVertex(m, (float) world.x, (float) world.y, (float) world.z).setColor(r, g, b, alpha);
     }
 
-    private FieldRipples() {
+    private FieldRipples
+() {
     }
 }

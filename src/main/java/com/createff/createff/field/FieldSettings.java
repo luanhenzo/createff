@@ -48,6 +48,9 @@ public final class FieldSettings {
     private final Map<UUID, String> trusted = new LinkedHashMap<>();
     private final List<String> interactBlocks = new ArrayList<>();
     private final List<String> interactItems = new ArrayList<>();
+    private final List<Gate> gates = new ArrayList<>();
+    /** The id the next gate gets. Ids are never used twice in a field. */
+    private int nextGateId = 1;
 
     /** Bumped on every change so the block entity knows when to resync clients. Not saved. */
     private int version;
@@ -192,6 +195,63 @@ public final class FieldSettings {
             version++;
         }
         return removed;
+    }
+
+    // --- Gates ------------------------------------------------------------------------------------------
+
+    /** The openings in the wall, in the order they were made. Change them only through the methods below. */
+    public List<Gate> gates() {
+        return gates;
+    }
+
+    /** Adds a gate, giving it the next id, and returns it with that id. */
+    public Gate addGate(Gate gate) {
+        Gate added = gate.withId(nextGateId++);
+        gates.add(added);
+        version++;
+        return added;
+    }
+
+    /** The gate with this id, or null. */
+    @Nullable
+    public Gate gateById(int id) {
+        for (Gate gate : gates) {
+            if (gate.id() == id) {
+                return gate;
+            }
+        }
+        return null;
+    }
+
+    /** Replaces the gate that has the same id as {@code gate}; false if there is none. */
+    public boolean setGateById(Gate gate) {
+        for (int i = 0; i < gates.size(); i++) {
+            if (gates.get(i).id() == gate.id()) {
+                gates.set(i, gate);
+                version++;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Replaces the gate at {@code index}; false if there is none. */
+    public boolean setGate(int index, Gate gate) {
+        if (index < 0 || index >= gates.size()) {
+            return false;
+        }
+        gates.set(index, gate);
+        version++;
+        return true;
+    }
+
+    public boolean removeGate(int index) {
+        if (index < 0 || index >= gates.size()) {
+            return false;
+        }
+        gates.remove(index);
+        version++;
+        return true;
     }
 
     // --- Interaction lists ------------------------------------------------------------------------------
@@ -404,6 +464,12 @@ public final class FieldSettings {
         tag.put("Trusted", players(trusted));
         tag.put("InteractBlocks", strings(interactBlocks));
         tag.put("InteractItems", strings(interactItems));
+        ListTag gateList = new ListTag();
+        for (Gate gate : gates) {
+            gateList.add(gate.save());
+        }
+        tag.put("Gates", gateList);
+        tag.putInt("NextGateId", nextGateId);
         return tag;
     }
 
@@ -422,6 +488,19 @@ public final class FieldSettings {
         readPlayers(tag, "Trusted", settings.trusted);
         readStrings(tag, "InteractBlocks", settings.interactBlocks);
         readStrings(tag, "InteractItems", settings.interactItems);
+        int highest = 0;
+        for (Tag entry : tag.getList("Gates", Tag.TAG_COMPOUND)) {
+            Gate gate = Gate.load((CompoundTag) entry);
+            settings.gates.add(gate);
+            highest = Math.max(highest, gate.id());
+        }
+        settings.nextGateId = Math.max(Math.max(1, tag.getInt("NextGateId")), highest + 1);
+        // A gate saved before gates had ids gets one now.
+        for (int i = 0; i < settings.gates.size(); i++) {
+            if (settings.gates.get(i).id() <= 0) {
+                settings.gates.set(i, settings.gates.get(i).withId(settings.nextGateId++));
+            }
+        }
         return settings;
     }
 

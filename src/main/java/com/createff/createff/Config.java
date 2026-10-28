@@ -9,6 +9,9 @@ public class Config {
     public static final ModConfigSpec.IntValue DEFAULT_EXTENT;
     public static final ModConfigSpec.IntValue MAX_EXTENT;
     public static final ModConfigSpec.IntValue MAX_FIELDS_PER_PLAYER;
+    public static final ModConfigSpec.IntValue GATE_MAX_WIDTH;
+    public static final ModConfigSpec.IntValue GATE_MAX_HEIGHT;
+    public static final ModConfigSpec.IntValue MAX_GATES_PER_FIELD;
     public static final ModConfigSpec.BooleanValue BLOCK_TRANSFERS_ACROSS_WALLS;
 
     public static final ModConfigSpec.DoubleValue MIN_RPM;
@@ -81,6 +84,12 @@ public class Config {
                 .defineInRange("maxExtent", 64, 1, 256);
         MAX_FIELDS_PER_PLAYER = BUILDER.comment("Force fields one player may own at once, in every dimension. Operators in creative mode are exempt. 0 means no limit")
                 .defineInRange("maxFieldsPerPlayer", 3, 0, 1000);
+        GATE_MAX_WIDTH = BUILDER.comment("Widest opening a gate may have in the wall of a field, in blocks")
+                .defineInRange("gateMaxWidth", 7, 1, 16);
+        GATE_MAX_HEIGHT = BUILDER.comment("Tallest opening a gate may have in the wall of a field, in blocks")
+                .defineInRange("gateMaxHeight", 9, 2, 16);
+        MAX_GATES_PER_FIELD = BUILDER.comment("Openings an owner may cut in the wall of one field. 0 turns gates off")
+                .defineInRange("maxGatesPerField", 4, 0, 64);
         BLOCK_TRANSFERS_ACROSS_WALLS = BUILDER.comment("Hoppers, pipes, funnels, chutes and other blocks outside a field cannot move items or fluids into or out of containers inside it. Blocks inside the field, or moving things from inside to outside, are not affected")
                 .define("blockTransfersAcrossWalls", true);
         BUILDER.pop();

@@ -30,6 +30,7 @@ public final class FieldNetwork {
         registrar.playToClient(FieldMessage.TYPE, FieldMessage.CODEC, ClientHandlers::message);
         registrar.playToClient(FieldHit.TYPE, FieldHit.CODEC, ClientHandlers::hit);
         registrar.playToClient(FieldRipple.TYPE, FieldRipple.CODEC, ClientHandlers::ripple);
+        registrar.playToServer(GateChange.TYPE, GateChange.CODEC, FieldNetwork::handleGate);
         registrar.playToServer(FieldChange.TYPE, FieldChange.CODEC, FieldNetwork::handleChange);
     }
 
@@ -59,7 +60,38 @@ public final class FieldNetwork {
         }
     }
 
-    private static FieldAdmin.Result apply(ServerPlayer player, ServerLevel level, Field field, FieldChange change) {
+    private static void handleGate(GateChange change, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        ServerLevel level = player.serverLevel();
+        Field field = FieldManager.get(level).get(change.core());
+        if (field == null || !FieldAdmin.inReach(player, field)) {
+            return;
+        }
+        if (!FieldAdmin.canManage(player, field)) {
+            send(player, FieldAdmin.Result.error("command.createff.not_owner"));
+            return;
+        }
+        FieldAdmin.Result result = switch (change.kind()) {
+            case ADD -> FieldAdmin.addGate(field, change.point());
+            case MOVE -> FieldAdmin.moveGate(field, change.index(), change.point());
+            case SIZE -> FieldAdmin.sizeGate(field, change.index(), change.width(), change.height());
+            case SHAPE -> FieldAdmin.shapeGate(field, change.index());
+            case OPEN -> FieldAdmin.openGate(field, change.index());
+            case REMOVE -> FieldAdmin.removeGate(field, change.index());
+        };
+        if (result.ok()) {
+            FieldAdmin.changed(level, field);
+        }
+        // The list on the screen shows the change itself; a gate put in the wall or moved is told in the action bar.
+        if (!result.ok() || change.kind() == GateChange.Kind.ADD || change.kind() == GateChange.Kind.MOVE) {
+            send(player, result);
+        }
+    }
+
+    private static FieldAdmin.Result apply(
+ServerPlayer player, ServerLevel level, Field field, FieldChange change) {
         return switch (change.kind()) {
             case SET_ACCESS -> {
                 FieldAction[] actions = FieldAction.values();

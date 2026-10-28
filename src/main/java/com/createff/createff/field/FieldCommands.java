@@ -123,6 +123,7 @@ public final class FieldCommands {
     }
 
     private static int debugShips(CommandSourceStack source, boolean on) {
+
         Config.DEBUG_LOG_SHIPS.set(on);
         Config.DEBUG_LOG_SHIPS.save();
         source.sendSuccess(() -> Component.literal("Ship logging is " + (on ? "on" : "off")), true);
@@ -326,7 +327,7 @@ public final class FieldCommands {
 
     /** Turns an operation result into command feedback, saving and syncing the field when it worked. */
     private static int finish(CommandSourceStack source, Field field, FieldAdmin.Result result) throws CommandSyntaxException {
-        Component message = Component.translatable(result.key(), result.args().toArray());
+        Component message = Component.translatable(result.key(), FieldAdmin.arguments(result.args()));
         if (!result.ok()) {
             throw new SimpleCommandExceptionType(message).create();
         }

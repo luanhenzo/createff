@@ -58,6 +58,10 @@ public final class FieldEntry {
             // The start of the step as it is carried along with the field, which makes the path relative to the wall.
             Vec3 carried = shape.carry(last, before);
             Optional<Vec3> hit = shape.clip(carried, now);
+            // Through the opening of a gate there is no wall, so nothing to be put back from.
+            if (hit.isPresent() && Gates.opensAt(field.settings().gates(), shape, hit.get())) {
+                continue;
+            }
             // A ship that moved over a player who stood still never crossed the wall: put them on the nearest side.
             Vec3 back = hit.map(point -> shape.pushOut(point, PUSHBACK))
                     .orElseGet(() -> shape.isSphere() || shape.isOriented()

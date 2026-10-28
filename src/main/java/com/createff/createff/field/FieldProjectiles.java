@@ -71,6 +71,10 @@ public final class FieldProjectiles {
             if (hit.isEmpty()) {
                 continue;
             }
+            // Through the opening of a gate there is no wall to hit.
+            if (Gates.opensAt(field.settings().gates(), shape, hit.get())) {
+                continue;
+            }
             // How fast it went at the wall, relative to the wall, which for a field on a ship is not its speed in the world.
             collide(level, field, entity, hit.get(), projectile, to.distanceTo(carried));
             return;

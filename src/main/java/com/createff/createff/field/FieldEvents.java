@@ -1,5 +1,6 @@
 package com.createff.createff.field;
 
+
 import com.createff.createff.Config;
 import com.createff.createff.CreateFF;
 import com.createff.createff.block.FieldProjectorBlock;
@@ -154,6 +155,10 @@ public final class FieldEvents {
                     Config.MAX_DAMAGE_PER_EXPLOSION.get());
             boolean rippled = false;
             for (Field field : manager.all()) {
+                // A blast in the opening of a gate is not against the wall.
+                if (Gates.opensAt(field.settings().gates(), field.worldShape(), center)) {
+                    continue;
+                }
                 double distance = field.distanceTo(center);
                 if (distance > radius) {
                     FieldDebug.explosionTooFar(field, explosion, distance);
@@ -183,7 +188,7 @@ public final class FieldEvents {
         }
 
         event.getAffectedBlocks().removeIf(pos -> manager.isCovered(pos));
-        FieldWorldEvents.shield(level, event.getAffectedEntities());
+        FieldWorldEvents.shield(level, event.getAffectedEntities(), explosion.center());
     }
 
     private static void deny(Player player) {

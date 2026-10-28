@@ -11,10 +11,12 @@ import com.createff.createff.block.FieldProjectorBlockEntity;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * The changes an owner can make to a field, shared by the commands and the screen so both enforce the same
@@ -38,6 +40,19 @@ public final class FieldAdmin {
         public static Result rawError(String message) {
             return new Result(false, "gui.createff.raw", List.of(message));
         }
+    }
+
+    /**
+     * The arguments of a message, ready for {@code Component.translatable}. One that starts with {@code @} is the key
+     * of a text, translated by whoever reads the message, so a side or a shape comes out in their language.
+     */
+    public static Object[] arguments(List<String> args) {
+        Object[] result = new Object[args.size()];
+        for (int i = 0; i < result.length; i++) {
+            String arg = args.get(i);
+            result[i] = arg.startsWith("@") ? Component.translatable(arg.substring(1)) : arg;
+        }
+        return result;
     }
 
     public record Profile(UUID id, String name) {
@@ -146,7 +161,7 @@ public final class FieldAdmin {
             return Result.error("command.createff.size_overlap");
         }
         field.setExtent(side, blocks);
-        return Result.ok("command.createff.size_changed", side.getName(), String.valueOf(blocks));
+        return Result.ok("command.createff.size_changed", "@gui.createff.side." + side.getName(), String.valueOf(blocks));
     }
 
     /** Sets the same reach on all six sides of a cube at once, or the radius of a sphere. All or nothing. */
@@ -166,7 +181,7 @@ public final class FieldAdmin {
         for (Direction side : Direction.values()) {
             field.setExtent(side, blocks);
         }
-        return Result.ok("command.createff.size_changed", "every", String.valueOf(blocks));
+        return Result.ok("command.createff.size_changed", "@gui.createff.side.every", String.valueOf(blocks));
     }
 
     /** Sets the radius of a sphere. */
@@ -216,7 +231,7 @@ public final class FieldAdmin {
     }
 
     private static String shapeName(FieldShape.Type type) {
-        return type.name().toLowerCase(java.util.Locale.ROOT);
+        return "@shape.createff." + type.name().toLowerCase(java.util.Locale.ROOT);
     }
 
     @Nullable
@@ -235,7 +250,105 @@ public final class FieldAdmin {
         return FieldManager.get(level).overlaps(candidate.bounds(), field.core());
     }
 
+    // --- Gates ------------------------------------------------------------------------------------------
+
+    /** The size a new gate starts with, in blocks. */
+    private static final double NEW_GATE_WIDTH = 3.0;
+    private static final double NEW_GATE_HEIGHT = 4.0;
+    /** The farthest from its projector an anchor may be, in blocks, so a made-up number is turned away. */
+    private static final double GATE_ANCHOR_LIMIT = 4096.0;
+
+    /** Cuts a new opening in the wall, at {@code anchor}: the place the player aimed at, in the field's own axes from its projector. */
+    public static Result addGate(Field field, Vec3 anchor) {
+        Result unfit = checkGates(anchor);
+        if (unfit != null) {
+            return unfit;
+        }
+        if (field.settings().gates().size() >= Config.MAX_GATES_PER_FIELD.get()) {
+            return Result.error("command.createff.gate_limit", String.valueOf(Config.MAX_GATES_PER_FIELD.get()));
+        }
+        Gate gate = new Gate(0, anchor, Math.min(NEW_GATE_WIDTH, Config.GATE_MAX_WIDTH.get()),
+                Math.min(NEW_GATE_HEIGHT, Config.GATE_MAX_HEIGHT.get()), Gate.Shape.RECTANGLE, true);
+        field.settings().addGate(gate);
+        return Result.ok("command.createff.gate_added");
+    }
+
+    /** Moves an opening to where the player aimed. */
+    public static Result moveGate(Field field, int index, Vec3 anchor) {
+        Result unfit = checkGates(anchor);
+        if (unfit != null) {
+            return unfit;
+        }
+        Gate gate = gate(field, index);
+        if (gate == null) {
+            return Result.error("command.createff.gate_missing");
+        }
+        field.settings().setGate(index, gate.withAnchor(anchor));
+        return Result.ok("command.createff.gate_moved");
+    }
+
+    /** Sets how big an opening is, within what the server allows. */
+    public static Result sizeGate(Field field, int index, double width, double height) {
+        Gate gate = gate(field, index);
+        if (gate == null) {
+            return Result.error("command.createff.gate_missing");
+        }
+        double wide = Math.max(1.0, Math.min(width, Config.GATE_MAX_WIDTH.get()));
+        double tall = Math.max(1.0, Math.min(height, Config.GATE_MAX_HEIGHT.get()));
+        field.settings().setGate(index, gate.withSize(wide, tall));
+        return Result.ok("command.createff.gate_resized", format(wide), format(tall));
+    }
+
+    /** Changes the outline of an opening to the next. */
+    public static Result shapeGate(Field field, int index) {
+        Gate gate = gate(field, index);
+        if (gate == null) {
+            return Result.error("command.createff.gate_missing");
+        }
+        field.settings().setGate(index, gate.withShape(gate.shape().next()));
+        return Result.ok("command.createff.gate_shaped", "@gate.createff.shape." + gate.shape().next().key());
+    }
+
+    /** Shuts an opening, or opens it again. */
+    public static Result openGate(Field field, int index) {
+        Gate gate = gate(field, index);
+        if (gate == null) {
+            return Result.error("command.createff.gate_missing");
+        }
+        field.settings().setGate(index, gate.withOpen(!gate.open()));
+        return Result.ok(gate.open() ? "command.createff.gate_shut" : "command.createff.gate_opened");
+    }
+
+    public static Result removeGate(Field field, int index) {
+        return field.settings().removeGate(index) ? Result.ok("command.createff.gate_removed") : Result.error("command.createff.gate_missing");
+    }
+
+    @Nullable
+    private static Gate gate(Field field, int index) {
+        List<Gate> gates = field.settings().gates();
+        return index >= 0 && index < gates.size() ? gates.get(index) : null;
+    }
+
+    /** Why a gate cannot be put at {@code anchor}, or null if it can. */
+    @Nullable
+    private static Result checkGates(Vec3 anchor) {
+        if (Config.MAX_GATES_PER_FIELD.get() <= 0) {
+            return Result.error("command.createff.gate_off");
+        }
+        // The wall is wherever the anchor points, so all that is checked is that it points somewhere sensible.
+        double size = anchor.lengthSqr();
+        if (Double.isNaN(size) || size < 1.0E-6 || size > GATE_ANCHOR_LIMIT * GATE_ANCHOR_LIMIT) {
+            return Result.error("command.createff.gate_far");
+        }
+        return null;
+    }
+
+    private static String format(double blocks) {
+        return blocks == Math.rint(blocks) ? String.valueOf((int) blocks) : String.format(java.util.Locale.ROOT, "%.1f", blocks);
+    }
+
     public static Result editList(Field field, boolean blocks, boolean add, String entry) {
+
         FieldSettings settings = field.settings();
         String text = entry.trim();
         boolean changed;

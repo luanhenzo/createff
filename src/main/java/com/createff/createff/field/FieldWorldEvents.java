@@ -1,7 +1,7 @@
 package com.createff.createff.field;
 
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 import com.createff.createff.CreateFF;
 
@@ -13,6 +13,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
@@ -41,7 +42,8 @@ public final class FieldWorldEvents {
         ServerLevel level = player.serverLevel();
         Field field = FieldManager.get(level).coveringFieldAt(event.getTarget());
         if (field == null || field.coversPoint(player.position())
-                || FieldProtection.bypasses(level, player) || field.allows(FieldAction.ENTER, player.getUUID())) {
+                || FieldProtection.bypasses(level, player) || field.allows(FieldAction.ENTER, player.getUUID())
+                || Gates.opensAt(field.settings().gates(), field.worldShape(), event.getTarget())) {
             return;
         }
         event.setCanceled(true);
@@ -113,12 +115,26 @@ public final class FieldWorldEvents {
         }
     }
 
-    /** Takes the protected entities out of an explosion, so a blast at the wall does not wreck what stands behind it. */
-    static void shield(ServerLevel level, List<Entity> affected) {
+    /**
+     * Takes the protected entities out of an explosion, so a blast at the wall does not wreck what stands behind it.
+     * A blast that comes in through the opening of a gate meets no wall, so what it reaches that way is not shielded.
+     */
+    static void shield(ServerLevel level, List<Entity> affected, Vec3 center) {
         FieldManager manager = FieldManager.get(level);
-        Predicate<Entity> protectedInside = entity ->
-                FieldProtection.isProtectedEntity(entity) && manager.isCoveredAt(entity.position());
-        affected.removeIf(protectedInside);
+        affected.removeIf(entity -> {
+            if (!FieldProtection.isProtectedEntity(entity)) {
+                return false;
+            }
+            Field field = manager.coveringFieldAt(entity.position());
+            if (field == null) {
+                return false;
+            }
+            if (!field.settings().gates().isEmpty() && !field.coversPoint(center)) {
+                Optional<Vec3> crossing = field.worldShape().clip(center, entity.position());
+                return crossing.isEmpty() || !Gates.opensAt(field.settings().gates(), field.worldShape(), crossing.get());
+            }
+            return true;
+        });
     }
 
     private FieldWorldEvents() {
