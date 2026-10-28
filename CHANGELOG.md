@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 (beta)
+
+### Fixed
+
+- With Create's wrench in hand, the list of what can be done to a gate no longer shows when a block is in the way,
+  however far away the gate is. The blocks of a Sable ship count too, which the game's own ray does not see.
+
 ## 0.2.0 (beta)
 
 ### Added
