@@ -57,8 +57,9 @@ Install the jar on **both the server and the clients**: the wall is predicted on
   through the gates of the field it stands in or near, sneak and use to turn its signal round (power opens by
   default). It is meant for decoration, such as an entrance to a town: the protection of blocks and the rules for
   using things inside the field still hold. A field may have `maxGatesPerField` gates (4 by default).
-- **Ships**: with Sable, a field on a ship moves with it. Ships that are not allowed in are pushed back, and fields of
-  different ships push each other apart.
+- **Ships**: with Sable, a field on a ship moves with it, and so do its gates. Ships that are not allowed in are pushed
+  back, unless they are at an open gate and no bigger than its outline, and fields of different ships push each other
+  apart.
 - **Visuals**: heat map where the wall was hit, ripples when something crosses or hits it, scaled to the blow.
 
 ### Upgrades

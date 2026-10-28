@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (beta)
 
 ### Added
 
@@ -15,8 +15,11 @@
   On a cube a new gate snaps to the grid of blocks (hold shift to place it freely). Every gate has a glowing border
   that burns brighter while something is in the opening, and a dim red one when the gate is shut. With Create's
   wrench in hand, looking at a gate picks it: a list on the screen, like the one of the schematic tools, offers to move
-  it, shut or open it, change its outline and remove it (it asks to be used twice, to be sure); the scroll wheel, with alt held, goes through it and use does the one chosen.
-- Gate Controller: a block that opens and shuts one gate of a field with redstone. Used with an empty hand it goes
+  it, shut or open it, change its outline and remove it (it asks to be used twice, to be sure); the scroll wheel,
+  with alt held, goes through it and use does the one chosen.
+  Gates work on a field carried by a Sable ship too, on a cube or a sphere, and turn with the hull. A ship goes
+  through an open gate when it is at the gate and no bigger than its outline seen along the way through; one that
+  is bigger, or beside the gate, is held back by the wall as before.- Gate Controller: a block that opens and shuts one gate of a field with redstone. Used with an empty hand it goes
   through the gates of the field it stands in or near, and used while sneaking it turns its signal round. Only
   someone who may change the field can pick its gate.
 - Brazilian Portuguese translation (`pt_br`). Shape and side names in messages and commands are translated too.
@@ -27,9 +30,13 @@
 - A limit of force fields per player: 3 by default, `maxFieldsPerPlayer` in the config, 0 for no limit. Operators in
   creative mode are exempt. It is per player, not per faction, because the mod has no factions of its own.
 
+### Internal
+
+- Unit tests of where a gate leaves the wall open (cube, sphere, a box turned by a ship, a sphere on a ship, which
+  ships fit through, and how gates are saved) run with the build.
+
 ### Known issues
 
-- Gates do not work in the wall of a field on a Sable ship.
 - A projector on a Create contraption (bearing, piston, gantry, cart) has no field while the contraption moves, and
   gets it back when it stops. Fields on Sable ships are not affected.
 - Transfers that do not happen during a block entity's tick (entities, moving contraptions, redstone pulses) are not
