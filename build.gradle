@@ -121,6 +121,12 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
+
+    // Puts the game on the class path of the unit tests, so they can use its classes (vectors, boxes, tags).
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
+    }
 }
 
 // Sets up a dependency configuration called 'localRuntime'.
@@ -236,3 +242,18 @@ idea {
     }
 }
 
+
+// Unit tests of the parts of the mod that do not need the game, such as where a gate leaves the wall open.
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+    }
+}
